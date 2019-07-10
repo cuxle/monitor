@@ -1,0 +1,63 @@
+1. how to read a file like /proc/pid/cmdline
+    google how to read a file using c++
+    a. #include <fstream>
+       using namespace std;
+       ifstream inFile;
+       inFile.open("C:\\temp\\datafile.txt");
+       if (!inFile) {
+            cerr << "Unable to open file datafile.txt";
+            exit(1);   // call system to stop
+        }
+        while (inFile >> x) {
+        sum = sum + x;
+        }
+        inFile.close();
+
+        // io/read-file-sum.cpp - Read integers from file and print sum.
+        // Fred Swartz 2003-08-20
+
+        #include <iostream>
+        #include <iomanip>
+        #include <fstream>
+        using namespace std;
+
+        int main() {
+            int sum = 0;
+            int x;
+            ifstream inFile;
+            
+            inFile.open("test.txt");
+            if (!inFile) {
+                cout << "Unable to open file";
+                exit(1); // terminate with error
+            }
+            
+            while (inFile >> x) {
+                sum = sum + x;
+            }
+            
+            inFile.close();
+            cout << "Sum = " << sum << endl; 
+            return 0;
+        }
+
+2. or you can use methods already implment in util.h
+    the problem is there is only new , and no delete
+    // wrapper for creating streams
+    std::ifstream Util::getStream(std::string path){
+        ifstream *stream = new ifstream;
+        stream->open (path, std::ifstream::in);
+        if (!*stream && !stream->is_open()){
+            stream->close();
+            throw std::runtime_error("Non - existing PID");
+        }
+        return *stream;
+    }
+
+3. how to read pids
+    a. ps ?
+    b. 遍历 /proc 目录下的可以转换成digit的目录
+    一开始的时候，自己看到要在/proc目录下查找所有子目录，判断所有子目录有可能是pid的这个问题的时候，觉得无从下手，但是当你知道linux的目录数据结构后，这个问题就不是问题了
+    
+
+4. cpu 的usage 怎么计算呢
