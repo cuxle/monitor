@@ -51,6 +51,9 @@ public:
 string ProcessParser::getCmd(string pid)
 {
     //cout << "getCmd:" << pid << endl;
+    if (!isPidExisting(pid)) {
+        return string();
+    }
     string location = Path::basePath() + pid + Path::cmdPath();
     ifstream stream = Util::getStream(location);
     string line;
