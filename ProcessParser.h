@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __PROCESSPARSER_H__
+#define __PROCESSPARSER_H__
 
 #include <algorithm>
 #include <iostream>
@@ -49,7 +50,7 @@ public:
 // TODO: Define all of the above functions below:
 string ProcessParser::getCmd(string pid)
 {
-    cout << "getCmd:" << pid << endl;
+    //cout << "getCmd:" << pid << endl;
     string location = Path::basePath() + pid + Path::cmdPath();
     ifstream stream = Util::getStream(location);
     string line;
@@ -67,26 +68,19 @@ vector<string> ProcessParser::getPidList()
     DIR *dir = opendir(Path::basePath().c_str());
     if (!dir) {
         throw std::runtime_error(std::strerror(errno));
-    } else {
-        cout << "open base path successfully" << endl;
     }
-
     while (dirent *drent = readdir(dir)) {
         if (drent->d_type != DT_DIR) 
             continue;
+            //if all the character in the name is a digit, we refer it as a pid
         if (all_of(drent->d_name, drent->d_name + strlen(drent->d_name), [](char c){ return isdigit(c);})) {
             pid_container.push_back(drent->d_name);
-            cout << "pushing back:" << drent->d_name << endl;
         }
     }
     if (closedir(dir)) {
-        cout << "close failed" << endl;
         throw std::runtime_error(std::strerror(errno));
-    } else {
-        cout << "close successfully" << endl;
     }
     return pid_container;
-
 }
 //你的问题在哪里卡住了，
 //1. 不确定自己的方法可以确定找到包含vmSize的那一行，
@@ -94,31 +88,33 @@ vector<string> ProcessParser::getPidList()
 
 string ProcessParser::getVmSize(string pid)
 {
-    cout << "getVmSize:" << pid << endl;
+    //cout << "getVmSize:" << pid << endl;
     //1. construct a string for location of the status file in proc
     //2. read the information in the file
     //3. find the vm info
     if (!isPidExisting(pid)) {
-        return "";
+        return string();
     }
-    const string match_name = "VmSize";
+    string match_name = "VmSize";
     string vmSizePath = Path::basePath() + pid + Path::statusPath();
     ifstream stream = Util::getStream(vmSizePath);
     string line;
+    float result = 0;
     while(getline(stream, line)) {
-        if (line.compare(0, 6, match_name) == 0) {
-            istringstream istr(line);
-            string data;
-            istr >> data;
-            istr >> data;
-            return data; //kb
+        if (line.compare(0, match_name.size(), match_name) == 0) {
+            istringstream buf(line);
+            istream_iterator<string> beg(buf), end;
+            vector<string> values(beg, end);
+            result = (stof(values[1])/float(1024*1024));
+            break;
         }
     }
+    return to_string(result);
 }
 
 std::string ProcessParser::getCpuPercent(std::string pid)
 {
-    cout << "getCpuPercent:" << pid << endl;
+    //cout << "getCpuPercent:" << pid << endl;
     if (!isPidExisting(pid)) {
         return "";
     }
@@ -131,22 +127,22 @@ std::string ProcessParser::getCpuPercent(std::string pid)
     istringstream buf(str);
     istream_iterator<string> beg(buf), end;
     vector<string> values(beg, end);
-    cout << "values.size:" << values.size() << endl;
+    //cout << "values.size:" << values.size() << endl;
 
     float utime = stof(ProcessParser::getProcUpTime(pid));
     float stime = stof(values[14]);
     float cutime = stof(values[15]);
     float cstime = stof(values[16]);
     float starttime = stof(values[21]);
-    cout << "alive after startime" << endl;
+    //cout << "alive after startime" << endl;
     float uptime = ProcessParser::getSysUpTime();
     float freq = sysconf(_SC_CLK_TCK);
-    cout << "alive after sysconf" << endl;
+    //cout << "alive after sysconf" << endl;
     float total_time = utime + stime + cutime + cstime;
     float seconds = uptime - (starttime / freq);
 
     result = 100.0 * ((total_time/freq)/seconds);
-    cout << "result :" << result << endl;
+   // cout << "result :" << result << endl;
     return to_string(result);    
 }
 
@@ -163,9 +159,9 @@ long int ProcessParser::getSysUpTime()
 
 std::string ProcessParser::getProcUpTime(string pid)
 {
-    cout << "getProcUpTime:" << pid << endl; 
+    //cout << "getProcUpTime:" << pid << endl; 
     if (!isPidExisting(pid)) {
-        cout << "not exist pid:" << pid << endl;
+        //cout << "not exist pid:" << pid << endl;
         return "";
     }
     string line;
@@ -184,19 +180,12 @@ std::string ProcessParser::getProcUpTime(string pid)
 
 string ProcessParser::getProcUser(string pid)
 {
-    cout << "getProcUser:" << pid << endl;
+    //cout << "getProcUser:" << pid << endl;
     if (!isPidExisting(pid)) {
-        return "";
+        return string();
     }
-    DIR *dir;
-    string strPath = Path::basePath() + pid + "/" + Path::statusPath();
-    if (dir = opendir(strPath.c_str())) {
-        // exist
-        closedir(dir);
-    } else {
-        //pid path not exists
-        return "";
-    }
+    DIR *dir = nullptr;
+    string strPath = Path::basePath() + pid + Path::statusPath();
     string line;
     string name = "Uid:";
     string result = "";
@@ -208,11 +197,12 @@ string ProcessParser::getProcUser(string pid)
             istream_iterator<string> beg(buf), end;
             vector<string> values(beg, end);
             result = values[1];
+            //cout <<"pid" << pid << "result:" << result << endl;
             break;
         }
     }
 
-    stream = Util::getStream("/etc/password");
+    stream = Util::getStream("/etc/passwd");
     name = ("x:" + result);
 
     while (std::getline(stream, line)) {
@@ -228,6 +218,7 @@ string ProcessParser::getProcUser(string pid)
 vector<string> ProcessParser::getSysCpuPercent(string coreNumber)
 {
     if (coreNumber.empty()) {
+        //cout << "core number : " << coreNumber << endl;
         return vector<string>();
     }
     string line;
@@ -378,10 +369,12 @@ string ProcessParser::getOSName()
 {
     string line;
     string name = "PRETTY_NAME=";
-
-    ifstream stream = Util::getStream(("/ect/os-release"));
+    //cout << "get out here" << endl;
+    ifstream stream = Util::getStream(string("/etc/os-release"));
+    //cout << "get out here" << endl;
 
     while (getline(stream, line)) {
+        //cout << line << endl;
         if (line.compare(0, name.size(), name) == 0) {
             size_t found = line.find("=");
             found++;
@@ -394,16 +387,15 @@ string ProcessParser::getOSName()
 
 }
 float get_sys_active_cpu_time(vector<string> values) {
+    //cout << "get sys active cpu time :" << values.size() << endl;
     return (stof(values[S_USER]) +
             stof(values[S_NICE]) +
-            stof(values[S_SYSTEM]) +
             stof(values[S_SYSTEM]) +
             stof(values[S_IRQ]) +
             stof(values[S_SOFTIRQ]) +
             stof(values[S_STEAL]) +
             stof(values[S_GUEST]) +
-            stof(values[S_GUEST_NICE])
-            );
+            stof(values[S_GUEST_NICE]));
 }
 
 float get_sys_idle_cpu_time(vector<string> values) 
@@ -413,10 +405,18 @@ float get_sys_idle_cpu_time(vector<string> values)
 
 std::string ProcessParser::PrintCpuStats(std::vector<std::string> values1, std::vector<std::string>values2)
 {
+    //cout << "PrintCpuStats:" << "values1:" << values1.size() << " values2:" << values2.size() << endl; 
+    //for (auto ss : values1) {
+       // cout << "PrintCpuStats:" << ss << endl;
+   // }
+   // for (auto ss : values2) {
+       // cout << "PrintCpuStats:" << ss << endl;
+   // }
     float activeTime = get_sys_active_cpu_time(values2) - get_sys_active_cpu_time(values1);
-    float idleTime = get_sys_idle_cpu_time(values2) - get_sys_idle_cpu_time(values2);
+    float idleTime = get_sys_idle_cpu_time(values2) - get_sys_idle_cpu_time(values1);
     float totalTime = activeTime + idleTime;
     float result = 100.0 * (activeTime / totalTime);
+    //cout << "result:" << result << endl;
     return to_string(result);
 }
 bool ProcessParser::isPidExisting(string pid)
@@ -430,3 +430,4 @@ bool ProcessParser::isPidExisting(string pid)
         return false;
     }
 }
+#endif

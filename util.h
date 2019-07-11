@@ -1,3 +1,6 @@
+#ifndef __UTIL_H__
+#define __UTIL_H__
+
 #include <string>
 #include <fstream>
 
@@ -57,3 +60,5 @@ std::ifstream Util::getStream(std::string path){
     }
     return stream;
 }
+
+#endif

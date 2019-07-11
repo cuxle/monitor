@@ -9,15 +9,12 @@
 class ProcessContainer{
 
 private:
-    std::vector<Process*> _list;
+    std::vector<Process> _list;
 public:
     ProcessContainer(){
-        this->refreshList();
+        refreshList();
     }
     ~ProcessContainer(){
-        for (auto proc : _list) {
-            delete proc;
-        }
     }
     void refreshList();
     std::string printList();
@@ -25,20 +22,17 @@ public:
 };
 
 void ProcessContainer::refreshList(){
-    std::cout << "begin" << std::endl;
     std::vector<std::string> pidList = ProcessParser::getPidList();
-    std::cout << "end" << std::endl;
-    std::cout << "pidList size:" << pidList.size() <<std::endl;
-    this->_list.clear();
+    _list.clear();
     for(auto pid : pidList){
-        Process * proc = new Process(pid);
+        Process proc(pid);
         this->_list.push_back(proc);
     }
 }
 std::string ProcessContainer::printList(){
     std::string result="";
     for(int i=0;i<this->_list.size();i++){
-        result += this->_list[i]->getProcess();
+        result += this->_list[i].getProcess();
     }
     return result;
 }
@@ -46,7 +40,7 @@ std::vector<std::vector<std::string> > ProcessContainer::getList(){
     std::vector<std::vector<std::string>> values;
     std::vector<std::string> stringifiedList;
     for(int i=0; i<ProcessContainer::_list.size(); i++){
-        stringifiedList.push_back(ProcessContainer::_list[i]->getProcess());
+        stringifiedList.push_back(ProcessContainer::_list[i].getProcess());
     }
     int lastIndex = 0;
     for (int i=0; i<stringifiedList.size();i++){

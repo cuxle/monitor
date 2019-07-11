@@ -1,3 +1,6 @@
+#ifndef __SYSINFO_H__
+#define __SYSINFO_H__
+
 #include <string>
 #include <iostream>
 #include <vector>
@@ -14,6 +17,7 @@ private:
     std::string OSname;
     std::string kernelVer;
     long upTime;
+    int coresNums;
     int totalProc;
     int runningProc;
     int threads;
@@ -25,7 +29,8 @@ public:
     Initial data for individual cores is set
     System data is set
     */
-        this->getOtherCores(ProcessParser::getNumberOfCores());
+        coresNums = ProcessParser::getNumberOfCores();
+        this->getOtherCores(coresNums);
         this->setLastCpuMeasures();
         this->setAttributes();
         this-> OSname = ProcessParser::getOSName();
@@ -47,6 +52,7 @@ public:
 };
 void SysInfo::getOtherCores(int _size){
 //when number of cores is detected, vectors are modified to fit incoming data
+        //cout << "get Other Cores:" << _size << endl;
         this->coresStats = std::vector<std::string>();
         this->coresStats.resize(_size);
         this->lastCpuCoresStats = std::vector<std::vector<std::string>>();
@@ -58,7 +64,8 @@ void SysInfo::getOtherCores(int _size){
     }
 }
 void SysInfo::setLastCpuMeasures(){
- this->lastCpuStats = ProcessParser::getSysCpuPercent();
+ this->lastCpuStats = ProcessParser::getSysCpuPercent(to_string(coresNums));
+ //cout << "this->lastCpuStats:size:" << lastCpuStats.size()<< endl;
 }
 void SysInfo::setCpuCoresStats(){
 // Getting data from files (previous data is required)
@@ -78,10 +85,12 @@ void SysInfo::setAttributes(){
     this-> totalProc = ProcessParser::getTotalNumberOfProcesses();
     this-> runningProc = ProcessParser::getNumberOfRunningProcesses();
     this-> threads = ProcessParser::getTotalThreads();
-    this->currentCpuStats = ProcessParser::getSysCpuPercent();
+    this->currentCpuStats = ProcessParser::getSysCpuPercent(to_string(coresNums));
     this->cpuPercent = ProcessParser::PrintCpuStats(this->lastCpuStats,this->currentCpuStats);
     this->lastCpuStats = this->currentCpuStats;
     this->setCpuCoresStats();
+    
+    //cout << "cpuPercent:" << cpuPercent << endl;
 
 }
 // Constructing string for every core data display
@@ -124,3 +133,4 @@ std::string SysInfo::getThreads()const {
 std::string SysInfo::getOSName()const {
     return this->OSname;
 }
+#endif

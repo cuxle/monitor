@@ -1,3 +1,5 @@
+#ifndef __PROCESS_H__
+#define __PROCESS_H__
 #include <string>
 
 using namespace std;
@@ -17,17 +19,20 @@ private:
 public:
     Process(string pid){
         this->pid = pid;
-        this->user = ProcessParser::getProcUser(pid);
+        this->user = ProcessParser::getProcUser(pid);        
         //TODOs:
         //complete for mem
-        this->mem = ProcessParser::getVmSize(pid);
+        this->mem = ProcessParser::getVmSize(pid);        
 
         //complete for cmd
         this->cmd = ProcessParser::getCmd(pid);
+
         //complete for upTime
         this->upTime = ProcessParser::getProcUpTime(pid);
+        
         //complete for cpu
         this->cpu = ProcessParser::getCpuPercent(pid);
+        //cout << "pid:" << pid << " " << "cpu:" << cpu << endl;
 
     }
     void setPid(int pid);
@@ -69,6 +74,8 @@ string Process::getProcess(){
     this->upTime = ProcessParser::getProcUpTime(this->pid);
     this->cpu = ProcessParser::getCpuPercent(this->pid);
 
-    return (this->pid + "   " + this->mem + "   " + this->upTime + "   " + this->cpu);//TODO: finish the string! this->user + "   "+ mem...cpu...upTime...;
+    return (this->pid + "    " + this->user + "    " + this->cpu + "    "+ this->mem + "    " + this->upTime + "    " + this->cmd);//TODO: finish the string! this->user + "   "+ mem...cpu...upTime...;
 
 }
+
+#endif
